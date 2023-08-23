@@ -165,7 +165,7 @@ function mn_deps {
         $install gcc make socat psmisc xterm openssh-clients iperf \
             iproute telnet python-setuptools libcgroup-tools \
             ethtool help2man net-tools
-        $install ${PYPKG}-pyflakes pylint ${PYPKG}-pep8-naming \
+        $install ${PYPKG}-pyflakes pylint ${PYPKG}-pep8-naming  \
             ${PYPKG}-pexpect
     elif [ "$DIST" = "SUSE LINUX"  ]; then
 		$install gcc make socat psmisc xterm openssh iperf \
@@ -174,39 +174,28 @@ function mn_deps {
                         python-pep8 ${PYPKG}-pexpect ${PYPKG}-tk
     else  # Debian/Ubuntu
         pf=pyflakes
-        pep8=pep8
         # Starting around 20.04, installing pyflakes instead of pyflakes3
         # causes Python 2 to be installed, which is exactly NOT what we want.
-        if [ "$DIST" = "Ubuntu" -a `expr $RELEASE '>=' 20.04` = "1" ]; then
+        if [ `expr $RELEASE '>=' 20.04` = "1" ]; then
                 pf=pyflakes3
         fi
-        # Debian 11 "bullseye" renamed
-        # * pep8 to python3-pep8
-        # * pyflakes to pyflakes3
-        if [ "$DIST" = "Debian" -a `expr $RELEASE '>=' 11` = "1" ]; then
-                pf=pyflakes3
-                pep8=python3-pep8
-        fi
-
         $install gcc make socat psmisc xterm ssh iperf telnet \
-                 ethtool help2man $pf pylint $pep8 \
-                 net-tools ${PYPKG}-tk
-
+                 ethtool help2man $pf pylint pep8 \
+                 net-tools \
+                 ${PYPKG}-pexpect ${PYPKG}-tk
         # Install pip
         $install ${PYPKG}-pip || $install ${PYPKG}-pip-whl
         if ! ${PYTHON} -m pip -V; then
             if [ $PYTHON_VERSION == 2 ]; then
-                wget https://bootstrap.pypa.io/pip/2.7/get-pip.py
+                wget https://bootstrap.pypa.io/2.6/get-pip.py
             else
                 wget https://bootstrap.pypa.io/get-pip.py
             fi
             sudo ${PYTHON} get-pip.py
             rm get-pip.py
         fi
-       ${python} -m pip install pexpect
         $install iproute2 || $install iproute
         $install cgroup-tools || $install cgroup-bin
-        $install cgroupfs-mount
     fi
 
     echo "Installing Mininet core"
@@ -222,7 +211,7 @@ function mn_doc {
     if ! $install doxygen-latex; then
         echo "doxygen-latex not needed"
     fi
-    sudo pip2 install doxypy
+    sudo pip install doxypy
 }
 
 # The following will cause a full OF install, covering:
@@ -242,6 +231,7 @@ function of {
     fi
     # was: git clone git://openflowswitch.org/openflow.git
     # Use our own fork on github for now:
+   # git clone git://github.com/mininet/openflow
     git clone https://github.com/mininet/openflow
     cd $BUILD_DIR/openflow
 
